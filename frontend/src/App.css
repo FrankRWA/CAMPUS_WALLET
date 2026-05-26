@@ -1,0 +1,293 @@
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+/* ── Design tokens ───────────────────────────────────────────────────────── */
+:root {
+  --bg:      #0d0d0d;
+  --surf:    #131313;
+  --surf2:   #1a1a1a;
+  --border:  #232323;
+  --border2: #303030;
+  --text:    #c8cdd2;
+  --dim:     #4e545c;
+  --green:   #3fb950;
+  --red:     #f85149;
+  --yellow:  #d29922;
+  --blue:    #58a6ff;
+  --font:    'Courier New', Courier, 'Lucida Console', monospace;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── App container ───────────────────────────────────────────────────────── */
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  border-left:  1px solid var(--border);
+  border-right: 1px solid var(--border);
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--surf2);
+  border-bottom: 2px solid var(--border2);
+}
+
+.header-title {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--text);
+}
+
+.online-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.online-dot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.online-dot.off { background: var(--red);   box-shadow: 0 0 6px var(--red);   }
+
+/* ── Offline banner ──────────────────────────────────────────────────────── */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #160c0c;
+  border-bottom: 1px solid var(--red);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.offline-label { color: var(--red);    }
+.offline-queue { color: var(--yellow); }
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+.section {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surf);
+}
+
+.section-lbl {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── Field base ──────────────────────────────────────────────────────────── */
+.field {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 8px 10px;
+  outline: none;
+  border-radius: 0;
+  letter-spacing: 0.5px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.field:focus          { border-color: var(--blue); }
+.field::placeholder   { color: var(--dim); }
+
+/* Remove number spinners */
+.field[type='number']::-webkit-outer-spin-button,
+.field[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.field[type='number'] { -moz-appearance: textfield; }
+
+/* ── Token input row ─────────────────────────────────────────────────────── */
+.token-row {
+  display: flex;
+  gap: 8px;
+}
+.token-row .field { flex: 1; }
+
+.field-err {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--red);
+}
+
+/* ── Generic button ──────────────────────────────────────────────────────── */
+.btn {
+  background: var(--surf2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 8px 14px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+.btn:active { opacity: 0.7; }
+
+/* ── Student card ────────────────────────────────────────────────────────── */
+.stu-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.avatar {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: #d0d0d0;
+  flex-shrink: 0;
+}
+
+.stu-meta { flex: 1; }
+.stu-name { font-size: 14px; letter-spacing: 1px; margin-bottom: 3px; }
+.stu-id   { font-size: 10px; color: var(--dim); letter-spacing: 2px; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  row-gap: 6px;
+  column-gap: 12px;
+  margin-bottom: 12px;
+}
+.ig-label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  align-self: center;
+}
+.ig-value { font-size: 13px; }
+
+/* ── Daily-limit bar ─────────────────────────────────────────────────────── */
+.bar-row  { display: flex; align-items: center; gap: 10px; }
+.bar-bg   { flex: 1; height: 3px; background: var(--border2); }
+.bar-fill { height: 100%; }
+.bar-pct  { font-size: 10px; letter-spacing: 1px; white-space: nowrap; }
+
+/* ── Transaction form ────────────────────────────────────────────────────── */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.form-lbl {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--dim);
+  min-width: 82px;
+  flex-shrink: 0;
+}
+.field-num  { width: 140px; }
+.field-pin  { width: 110px; }
+.field-unit {
+  font-size: 11px;
+  color: var(--dim);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  background: #0c1a0c;
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-family: var(--font);
+  font-size: 12px;
+  letter-spacing: 3px;
+  cursor: pointer;
+}
+.btn-primary:disabled {
+  background: var(--surf);
+  border-color: var(--border2);
+  color: var(--dim);
+  cursor: not-allowed;
+}
+.btn-primary:not(:disabled):active { opacity: 0.75; }
+
+/* ── Status box ──────────────────────────────────────────────────────────── */
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.status-icon { font-size: 17px; }
+.status-msg  { letter-spacing: 1px; }
+
+.status-meta {
+  font-size: 12px;
+  color: var(--dim);
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.status-hash {
+  font-size: 10px;
+  color: var(--border2);
+  letter-spacing: 1px;
+  word-break: break-all;
+  margin-bottom: 14px;
+}
+
+.btn-new {
+  color: var(--dim);
+  border-color: var(--border2);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 7px 14px;
+}
+
+/* ── Recent transactions ─────────────────────────────────────────────────── */
+.txn-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.txn-row:last-child { border-bottom: none; }
+
+.txn-time { color: var(--dim); min-width: 36px; flex-shrink: 0; }
+.txn-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.txn-amt  { min-width: 100px; text-align: right; flex-shrink: 0; }
+.txn-hash { min-width: 110px; text-align: right; flex-shrink: 0;
+            overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
+.green  { color: var(--green);  }
+.red    { color: var(--red);    }
+.yellow { color: var(--yellow); }
+.dim    { color: var(--dim);    }
+.small  { font-size: 11px;      }
