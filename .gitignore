@@ -1,0 +1,5 @@
+campus_wallet.db
+qr_codes/
+token_student_map.json
+__pycache__/
+*.pyc
