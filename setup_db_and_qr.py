@@ -49,6 +49,8 @@ CREATE TABLE IF NOT EXISTS transactions_ledger (
     amount           REAL    NOT NULL,
     transaction_type TEXT    NOT NULL CHECK(transaction_type IN ('credit', 'debit')),
     description      TEXT,
+    prev_hash        TEXT,
+    curr_hash        TEXT,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 """
