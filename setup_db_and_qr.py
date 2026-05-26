@@ -8,6 +8,7 @@ Run:  python3 setup_db_and_qr.py
 import json
 import os
 import random
+import secrets
 import sqlite3
 import string
 
@@ -53,6 +54,35 @@ CREATE TABLE IF NOT EXISTS transactions_ledger (
     curr_hash        TEXT,
     created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS parents (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT    NOT NULL,
+    email         TEXT    UNIQUE NOT NULL,
+    password_hash TEXT    NOT NULL,
+    phone         TEXT,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS parent_student_links (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id  INTEGER NOT NULL REFERENCES parents(id),
+    student_id INTEGER NOT NULL REFERENCES students(id),
+    UNIQUE(parent_id, student_id)
+);
+
+CREATE TABLE IF NOT EXISTS parent_recharges (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id          INTEGER NOT NULL REFERENCES students(id),
+    parent_id           INTEGER REFERENCES parents(id),
+    parent_phone        TEXT,
+    amount              REAL    NOT NULL,
+    momo_transaction_id TEXT    UNIQUE,
+    status              TEXT    NOT NULL
+        CHECK(status IN ('pending', 'verified', 'failed')),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verified_at         TIMESTAMP
+);
 """
 
 # ---------------------------------------------------------------------------
@@ -72,6 +102,16 @@ STUDENT_NAMES = [
     "Mia Garcia",       "Noah Martinez",   "Olivia Davis",   "Peter Robinson",
     "Quinn Thompson",   "Rachel Lewis",    "Samuel Walker",  "Tina Hall",
 ]
+
+# (parent_name, email, phone, child_index)  child_index → STUDENT_NAMES position
+PARENTS = [
+    ("Alice Parent",    "alice.parent@demo.rw",   "0788001001", 0),
+    ("Robert Smith",    "robert.smith@demo.rw",   "0788001002", 1),
+    ("Claire White",    "claire.white@demo.rw",   "0788001003", 2),
+    ("Daniel Brown",    "daniel.brown@demo.rw",   "0788001004", 3),
+    ("Helen Martinez",  "helen.martinez@demo.rw", "0788001005", 4),
+]
+DEFAULT_PARENT_PASSWORD = b"parent1234"
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +172,55 @@ def seed_students(conn: sqlite3.Connection, school_ids: list[int]) -> list[int]:
 
 
 # ---------------------------------------------------------------------------
+# Parents
+# ---------------------------------------------------------------------------
+def seed_parents(conn: sqlite3.Connection, student_ids: list[int]) -> list[int]:
+    cur = conn.cursor()
+    parent_ids = []
+    for name, email, phone, child_idx in PARENTS:
+        pw_hash = bcrypt.hashpw(DEFAULT_PARENT_PASSWORD, bcrypt.gensalt()).decode()
+        cur.execute(
+            "INSERT OR IGNORE INTO parents (name, email, password_hash, phone) VALUES (?, ?, ?, ?)",
+            (name, email, pw_hash, phone),
+        )
+        cur.execute("SELECT id FROM parents WHERE email = ?", (email,))
+        parent_id = cur.fetchone()[0]
+        parent_ids.append(parent_id)
+        student_id = student_ids[child_idx]
+        cur.execute(
+            "INSERT OR IGNORE INTO parent_student_links (parent_id, student_id) VALUES (?, ?)",
+            (parent_id, student_id),
+        )
+    conn.commit()
+    print(f"[db]  Seeded {len(PARENTS)} parents (password='parent1234' for all).")
+    return parent_ids
+
+
+def seed_sample_recharges(conn: sqlite3.Connection, parent_ids: list[int], student_ids: list[int]) -> None:
+    """Historical verified recharges so the parent dashboard has data on first login."""
+    cur = conn.cursor()
+    samples = [
+        (student_ids[0], parent_ids[0], "0788001001", 15000, "2026-04-10T08:00:00+00:00"),
+        (student_ids[0], parent_ids[0], "0788001001", 10000, "2026-04-25T14:30:00+00:00"),
+        (student_ids[1], parent_ids[1], "0788001002", 20000, "2026-04-15T09:00:00+00:00"),
+        (student_ids[2], parent_ids[2], "0788001003",  8000, "2026-05-01T16:00:00+00:00"),
+        (student_ids[3], parent_ids[3], "0788001004", 12000, "2026-05-10T11:00:00+00:00"),
+        (student_ids[4], parent_ids[4], "0788001005",  5000, "2026-05-15T10:00:00+00:00"),
+    ]
+    for student_id, parent_id, phone, amount, ts in samples:
+        tx_id = f"RC_SEED_{secrets.token_hex(4).upper()}"
+        cur.execute(
+            """INSERT OR IGNORE INTO parent_recharges
+               (student_id, parent_id, parent_phone, amount, momo_transaction_id,
+                status, created_at, verified_at)
+               VALUES (?, ?, ?, ?, ?, 'verified', ?, ?)""",
+            (student_id, parent_id, phone, amount, tx_id, ts, ts),
+        )
+    conn.commit()
+    print(f"[db]  Seeded {len(samples)} sample recharges.")
+
+
+# ---------------------------------------------------------------------------
 # QR codes
 # ---------------------------------------------------------------------------
 def generate_qr_codes(student_ids: list[int]) -> dict[str, int]:
@@ -178,9 +267,11 @@ def main() -> None:
     conn.execute("PRAGMA foreign_keys = ON")
     try:
         setup_schema(conn)
-        school_ids = seed_schools(conn)
+        school_ids  = seed_schools(conn)
         student_ids = seed_students(conn, school_ids)
-        token_map = generate_qr_codes(student_ids)
+        parent_ids  = seed_parents(conn, student_ids)
+        seed_sample_recharges(conn, parent_ids, student_ids)
+        token_map   = generate_qr_codes(student_ids)
         save_token_map(token_map)
     finally:
         conn.close()
